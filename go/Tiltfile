@@ -1,0 +1,21 @@
+# Tiltfile for using live_update with example Go app
+
+# To deploy to a non-local cluster, you'll need to tell Tilt what registry to use.
+# Uncomment the line below, and replace 'gcr.io/example' with your registry
+# default_registry('gcr.io/example')
+
+k8s_yaml('hello.yaml')
+
+docker_build('hello', './hello',
+  live_update=[
+    # hello/go.mod is the list of dependencies
+    # we don't want the container running in the cluster to download everything,
+    # so fall back to an image build
+    fall_back_on('hello/go.mod'),
+    sync('./hello', '/app/src'),
+    run('cd /app/src && go install .'),
+    # restarting the container picks up the rebuilt binary
+    restart_container(),
+  ])
+
+k8s_resource('hello', port_forwards=5000)
