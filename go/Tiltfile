@@ -6,7 +6,7 @@
 
 k8s_yaml('hello.yaml')
 
-docker_build('hello', './hello',
+docker_build('hello-go-image', './hello',
   live_update=[
     # hello/go.mod is the list of dependencies
     # we don't want the container running in the cluster to download everything,
