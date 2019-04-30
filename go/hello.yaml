@@ -6,6 +6,6 @@ metadata:
 spec:
   containers:
   - name: hello
-    image: hello-image
+    image: hello-go-image
     ports:
     - containerPort: 5000
