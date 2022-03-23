@@ -1,0 +1,30 @@
+# reads the entrypoint from the first container's command
+# may require adjustment if:
+# - the deployment has multiple containers and you want to update one other than the first
+# - you're using something other than Deployment
+# - you're using ContainerSpec.Args in addition to Command
+load('ext://restart_process', 'docker_build_with_restart')
+def deployment_with_entrypoint(
+  yaml_file,
+  base_image_name,
+  live_update=[]):
+  
+  depl = read_yaml(yaml_file)
+
+  # grab the first ContainerSpec (for this example's purposes, assume we just want to deal with the first container in the pod)
+  c = depl['spec']['template']['spec']['containers'][0]
+  # pick a new image name that will probably be unique
+  # (but for this example we're not being super careful about that)
+  new_image_name = '%s-%s' % (base_image_name, depl['metadata']['name'])
+
+  # edit the deployment in-memory to use the new image name
+  c['image'] = new_image_name
+
+  # define a new docker image that's just `FROM base_image`, just to get a different name
+  docker_build_with_restart(new_image_name, '.', dockerfile_contents='FROM %s' % (base_image_name), live_update=live_update, entrypoint=c['command'])
+  k8s_yaml(encode_yaml(depl))
+
+docker_build('srv', '.')
+live_update=[sync('.', '/')]
+deployment_with_entrypoint('srv1.yaml', 'srv', live_update=live_update)
+deployment_with_entrypoint('srv2.yaml', 'srv', live_update=live_update)
