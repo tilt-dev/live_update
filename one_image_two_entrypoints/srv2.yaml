@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: srv2
+spec:
+  selector:
+    matchLabels:
+      app: srv2
+  template:
+    metadata:
+      labels:
+        app: srv2
+    spec:
+      containers:
+      - name: srv2
+        image: myimage
+        # 1. read 1.txt on startup
+        # 2. initialize I to 0 and loop w/ echoes to make restarts easily observable
+        command: ["sh", "-c", "J=$(cat 1.txt); I=0; while true; do I=$((I + 1)); echo srv2 $J $I; sleep 1; done"]
+        ports:
+        - containerPort: 8081
+        resources:
+          requests:
+            cpu: "10m"
